@@ -2,22 +2,20 @@
 """
 User Class from Models Module
 """
-import hashlib
 import os
 from models.base_model import BaseModel, Base
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Float
-STORAGE_TYPE = os.environ.get('HBNB_TYPE_STORAGE')
+from hashlib import md5
+storage_type = os.environ.get('HBNB_TYPE_STORAGE')
 
 
 class User(BaseModel, Base):
-    """
-        User class handles all application users
-    """
-    if STORAGE_TYPE == "db":
+    """User class handles all application users"""
+    if storage_type == "db":
         __tablename__ = 'users'
         email = Column(String(128), nullable=False)
-        password = Column(String(128), nullable=False)
+        password = Column("password", String(128), nullable=False)
         first_name = Column(String(128), nullable=True)
         last_name = Column(String(128), nullable=True)
 
@@ -31,19 +29,23 @@ class User(BaseModel, Base):
 
     def __init__(self, *args, **kwargs):
         """
-            instantiates user object
+        initialize User Model, inherits from BaseModel
         """
-        if kwargs:
-            pwd = kwargs.pop('password', None)
-            if pwd:
-                User.__set_password(self, pwd)
         super().__init__(*args, **kwargs)
 
-    def __set_password(self, pwd):
+    @property
+    def password(self):
         """
-            custom setter: encrypts password to MD5
+        getter for password
+        :return: password (hashed)
         """
-        secure = hashlib.md5()
-        secure.update(pwd.encode("utf-8"))
-        secure_password = secure.hexdigest()
-        setattr(self, "password", secure_password)
+        return self.__dict__.get("password")
+
+    @password.setter
+    def password(self, password):
+        """
+        Password setter, with md5 hasing
+        :param password: password
+        :return: nothing
+        """
+        self.__dict__["password"] = md5(password.encode('utf-8')).hexdigest()

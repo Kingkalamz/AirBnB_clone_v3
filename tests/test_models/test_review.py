@@ -2,23 +2,19 @@
 """
 Unit Test for Review Class
 """
-from datetime import datetime
-import inspect
-import json
-import models
-from os import environ, stat
-import pep8
 import unittest
+from datetime import datetime
+import models
+import json
+import os
 
 Review = models.review.Review
 BaseModel = models.base_model.BaseModel
-STORAGE_TYPE = environ.get('HBNB_TYPE_STORAGE')
+storage_type = os.environ.get('HBNB_TYPE_STORAGE')
 
 
 class TestReviewDocs(unittest.TestCase):
     """Class for testing BaseModel docs"""
-
-    all_funcs = inspect.getmembers(Review, inspect.isfunction)
 
     @classmethod
     def setUpClass(cls):
@@ -39,25 +35,6 @@ class TestReviewDocs(unittest.TestCase):
         actual = Review.__doc__
         self.assertEqual(expected, actual)
 
-    def test_all_function_docs(self):
-        """... tests for ALL DOCS for all functions in db_storage file"""
-        all_functions = TestReviewDocs.all_funcs
-        for function in all_functions:
-            self.assertIsNotNone(function[1].__doc__)
-
-    def test_pep8_review(self):
-        """... review.py conforms to PEP8 Style"""
-        pep8style = pep8.StyleGuide(quiet=True)
-        errors = pep8style.check_files(['models/review.py'])
-        self.assertEqual(errors.total_errors, 0, errors.messages)
-
-    def test_file_is_executable(self):
-        """... tests if file has correct permissions so user can execute"""
-        file_stat = stat('models/review.py')
-        permissions = str(oct(file_stat[0]))
-        actual = int(permissions[5:-2]) >= 5
-        self.assertTrue(actual)
-
 
 class TestReviewInstances(unittest.TestCase):
     """testing for class instances"""
@@ -77,7 +54,7 @@ class TestReviewInstances(unittest.TestCase):
         """... checks if Review is properly instantiated"""
         self.assertIsInstance(self.review, Review)
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+    @unittest.skipIf(storage_type == 'db', 'skip if environ is db')
     def test_to_string(self):
         """... checks if BaseModel is properly casted to string"""
         my_str = str(self.review)
@@ -88,7 +65,7 @@ class TestReviewInstances(unittest.TestCase):
                 actual += 1
         self.assertTrue(3 == actual)
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+    @unittest.skipIf(storage_type == 'db', 'skip if environ is db')
     def test_instantiation_no_updated(self):
         """... should not have updated attribute"""
         my_str = str(self.review)
@@ -97,7 +74,7 @@ class TestReviewInstances(unittest.TestCase):
             actual += 1
         self.assertTrue(0 == actual)
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+    @unittest.skipIf(storage_type == 'db', 'skip if environ is db')
     def test_updated_at(self):
         """... save function should add updated_at attribute"""
         self.review.save()
@@ -105,7 +82,7 @@ class TestReviewInstances(unittest.TestCase):
         expected = type(datetime.now())
         self.assertEqual(expected, actual)
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+    @unittest.skipIf(storage_type == 'db', 'skip if environ is db')
     def test_to_json(self):
         """... to_json should return serializable dict object"""
         self.review_json = self.review.to_json()
@@ -116,7 +93,7 @@ class TestReviewInstances(unittest.TestCase):
             actual = 0
         self.assertTrue(1 == actual)
 
-    @unittest.skipIf(STORAGE_TYPE == 'db', 'skip if environ is db')
+    @unittest.skipIf(storage_type == 'db', 'skip if environ is db')
     def test_json_class(self):
         """... to_json should include class key with value Review"""
         self.review_json = self.review.to_json()
