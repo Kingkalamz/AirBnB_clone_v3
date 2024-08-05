@@ -38,11 +38,32 @@ class BaseModel:
 
     def __init__(self, *args, **kwargs):
         """instantiation of new BaseModel Class"""
-        self.id = str(uuid4())
-        self.created_at = datetime.now()
         if kwargs:
-            for key, value in kwargs.items():
-                setattr(self, key, value)
+            self.__set_attributes(kwargs)
+        else:
+            self.id = str(uuid4())
+            self.created_at = datetime.now()
+
+    def __set_attributes(self, attr_dict):
+        """
+            private: converts kwargs values to python class attributes
+        """
+        if 'id' not in attr_dict:
+            attr_dict['id'] = str(uuid4())
+        if 'created_at' not in attr_dict:
+            attr_dict['created_at'] = datetime.now()
+        elif not isinstance(attr_dict['created_at'], datetime):
+            attr_dict['created_at'] = datetime.strptime(
+                attr_dict['created_at'], '%Y-%m-%d %H:%M:%S.%f')
+        if 'updated_at' in attr_dict:
+            if not isinstance(attr_dict['updated_at'], datetime):
+                attr_dict['updated_at'] = datetime.strptime(
+                    attr_dict['updated_at'], '%Y-%m-%d %H:%M:%S.%f')
+        if storage_type != 'db':
+            if attr_dict['__class__']:
+                attr_dict.pop('__class__')
+        for attr, val in attr_dict.items():
+            setattr(self, attr, val)
 
     def __is_serializable(self, obj_v):
         """
@@ -73,16 +94,15 @@ class BaseModel:
         """returns json representation of self"""
         bm_dict = {}
         for key, value in (self.__dict__).items():
+            if key == '_sa_instance_state':
+                del key
+                continue
             if (self.__is_serializable(value)):
                 bm_dict[key] = value
             else:
                 bm_dict[key] = str(value)
         bm_dict['__class__'] = type(self).__name__
-        if '_sa_instance_state' in bm_dict:
-            bm_dict.pop('_sa_instance_state')
-        if storage_type == "db" and 'password' in bm_dict:
-            bm_dict.pop('password')
-        return bm_dict
+        return(bm_dict)
 
     def __str__(self):
         """returns string type representation of object instance"""
@@ -93,4 +113,4 @@ class BaseModel:
         """
             deletes current instance from storage
         """
-        self.delete()
+        models.storage.delete(self)
